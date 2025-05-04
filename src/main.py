@@ -16,11 +16,10 @@ class Product:
 
 
 class Category:
-    # Class attributes for counting
-    category_count = 0
-    product_count = 0
+    _category_count: int = 0  # Private class attribute with type hint
+    _product_count: int = 0  # Private class attribute with type hint
 
-    def __init__(self, name: str, description: str, products: list):
+    def __init__(self, name: str, description: str, products: list[Product]):
         """
         Initialize a Category instance.
 
@@ -33,18 +32,36 @@ class Category:
         self.description = description
         self.products = products
 
-        # Increment category counter
-        Category.category_count += 1
+        # Increment counters
+        Category._category_count += 1
+        Category._product_count += len(products)
 
-        # Increment product counter by the number of products in this category
-        Category.product_count += len(products)
+    @classmethod
+    def reset_counters(cls) -> None:
+        """Reset all counters (for testing purposes)"""
+        cls._category_count = 0
+        cls._product_count = 0
 
     @property
-    def category_count(self):
-        """Getter for the class attribute category_count"""
-        return Category.category_count
+    def category_count(self) -> int:
+        """Get total number of categories"""
+        return Category._category_count
 
     @property
-    def product_count(self):
-        """Getter for the class attribute product_count"""
-        return Category.product_count
+    def product_count(self) -> int:
+        """Get total number of products across all categories"""
+        return Category._product_count
+
+
+if __name__ == "__main__":
+    # Example usage
+    Category.reset_counters()
+
+    p1 = Product("Phone", "Smartphone", 500.0, 10)
+    p2 = Product("Laptop", "Gaming laptop", 1500.0, 5)
+
+    electronics = Category("Electronics", "Electronic devices", [p1, p2])
+
+    print(f"Total categories: {electronics.category_count}")
+    print(f"Total products: {electronics.product_count}")
+    print(f"Products in this category: {len(electronics.products)}")
