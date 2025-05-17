@@ -65,4 +65,3 @@ if __name__ == "__main__":
     print(f"Total categories: {electronics.category_count}")
     print(f"Total products: {electronics.product_count}")
     print(f"Products in this category: {len(electronics.products)}")
-
