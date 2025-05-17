@@ -66,3 +66,4 @@ if __name__ == "__main__":
     print(f"Total products: {electronics.product_count}")
     print(f"Products in this category: {len(electronics.products)}")
 
+78

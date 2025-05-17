@@ -86,3 +86,4 @@ def test_interaction_between_classes():
     assert category.category_count == 1
     assert category.product_count == 2
 
+78
