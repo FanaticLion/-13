@@ -13,6 +13,19 @@ class Product:
         self._price = price  # Приватный атрибут
         self.quantity = quantity
 
+    def __str__(self) -> str:
+        """Возвращает строковое представление продукта"""
+        return f"{self.name}, {self.price} руб. Остаток: {self.quantity} шт."
+
+    def __add__(self, other) -> float:
+        """
+        Сложение двух продуктов.
+        Возвращает сумму произведений цены на количество для каждого продукта.
+        """
+        if not isinstance(other, Product):
+            raise TypeError("Можно складывать только объекты класса Product")
+        return self.price * self.quantity + other.price * other.quantity
+
     @property
     def price(self) -> float:
         """Геттер для цены"""
@@ -47,6 +60,11 @@ class Category:
         Category._category_count += 1
         Category._product_count += len(products)
 
+    def __str__(self) -> str:
+        """Возвращает строковое представление категории"""
+        total_quantity = sum(product.quantity for product in self._products)
+        return f"{self.name}, количество продуктов: {total_quantity} шт."
+
     def add_product(self, product: Product) -> None:
         """Добавляет продукт в категорию"""
         self._products.append(product)
@@ -55,10 +73,7 @@ class Category:
     @property
     def products(self) -> str:
         """Геттер для форматированного вывода продуктов"""
-        products_str = ""
-        for product in self._products:
-            products_str += f"{product.name}, {product.price} руб. Остаток: {product.quantity} шт.\n"
-        return products_str
+        return "\n".join(str(product) for product in self._products)
 
     @classmethod
     def new_product(cls, product_data: dict) -> Product:
@@ -94,23 +109,42 @@ if __name__ == "__main__":
     p1 = Product("Phone", "Smartphone", 500.0, 10)
     p2 = Product("Laptop", "Gaming laptop", 1500.0, 5)
 
+    # Тестирование __str__ для Product
+    print("Тест __str__ для Product:")
+    print(p1)  # Выведет: Phone, 500.0 руб. Остаток: 10 шт.
+    print(p2)  # Выведет: Laptop, 1500.0 руб. Остаток: 5 шт.
+
+    # Тестирование __add__ для Product
+    print("\nТест __add__ для Product:")
+    total_value = p1 + p2
+    print(f"Общая стоимость товаров: {total_value} руб.")  # Выведет: 5000 + 7500 = 12500 руб.
+
     electronics = Category("Electronics", "Electronic devices", [p1, p2])
+
+    # Тестирование __str__ для Category
+    print("\nТест __str__ для Category:")
+    print(electronics)  # Выведет: Electronics, количество продуктов: 15 шт.
 
     # Добавляем новый продукт
     p3 = Product("Tablet", "Android tablet", 300.0, 8)
     electronics.add_product(p3)
+
+    # Проверяем обновленное количество
+    print("\nПосле добавления Tablet:")
+    print(electronics)  # Выведет: Electronics, количество продуктов: 23 шт.
 
     # Создаем продукт через класс-метод
     p4_data = {"name": "Mouse", "description": "Wireless mouse", "price": 50.0, "quantity": 20}
     p4 = Category.new_product(p4_data)
     electronics.add_product(p4)
 
-    print(f"Total categories: {electronics.category_count}")
-    print(f"Total products: {electronics.product_count}")
-    print("Products in this category:")
+    print("\nПосле добавления Mouse:")
+    print(electronics)  # Выведет: Electronics, количество продуктов: 43 шт.
+
+    print("\nСписок продуктов:")
     print(electronics.products)
 
     # Тестируем сеттер цены
     p1.price = -100  # Должно вывести сообщение об ошибке
     p1.price = 600   # Корректное обновление цены
-    print(f"New price for {p1.name}: {p1.price}")
+    print(f"\nNew price for {p1.name}: {p1.price}")

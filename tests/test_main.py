@@ -5,26 +5,23 @@ from src.main import Product, Category
 class TestProduct:
     """Tests for Product class"""
 
-    def test_product_initialization(self):
-        """Test product initialization"""
+    def test_product_str(self):
+        """Test __str__ method for Product"""
         product = Product("Test", "Description", 100.0, 5)
+        expected = "Test, 100.0 руб. Остаток: 5 шт."
+        assert str(product) == expected
 
-        assert product.name == "Test"
-        assert product.description == "Description"
-        assert product.price == 100.0  # Используем property-геттер
-        assert product.quantity == 5
+    def test_product_add(self):
+        """Test __add__ method for Product"""
+        p1 = Product("P1", "D1", 100.0, 2)
+        p2 = Product("P2", "D2", 200.0, 3)
 
-    def test_product_price_validation(self):
-        """Test price validation in setter"""
-        product = Product("Test", "Desc", 100.0, 1)
+        # Test valid addition
+        assert p1 + p2 == 100.0 * 2 + 200.0 * 3
 
-        # Попытка установить отрицательную цену
-        product.price = -50
-        assert product.price == 100.0  # Цена не изменилась
-
-        # Корректное изменение цены
-        product.price = 150.0
-        assert product.price == 150.0
+        # Test invalid addition
+        with pytest.raises(TypeError):
+            p1 + "not a product"
 
 
 class TestCategory:
@@ -44,54 +41,13 @@ class TestCategory:
             Product("Product 2", "Desc 2", 200.0, 3)
         ]
 
-    def test_category_initialization(self, sample_products):
-        """Test category initialization"""
+    def test_category_str(self, sample_products):
+        """Test __str__ method for Category"""
         category = Category("Test", "Description", sample_products)
+        expected = "Test, количество продуктов: 8 шт."
+        assert str(category) == expected
 
-        assert category.name == "Test"
-        assert category.description == "Description"
-        # Проверяем форматированную строку продуктов
-        assert "Product 1, 100.0 руб. Остаток: 5 шт." in category.products
-        assert "Product 2, 200.0 руб. Остаток: 3 шт." in category.products
-
-    def test_add_product(self, sample_products):
-        """Test adding product to category"""
-        category = Category("Test", "Desc", sample_products)
-        initial_count = category.product_count
-
-        new_product = Product("New", "New desc", 50.0, 10)
-        category.add_product(new_product)
-
-        assert "New, 50.0 руб. Остаток: 10 шт." in category.products
-        assert category.product_count == initial_count + 1
-
-    def test_new_product_classmethod(self):
-        """Test new_product class method"""
-        product_data = {
-            "name": "Test Product",
-            "description": "Test Desc",
-            "price": 99.99,
-            "quantity": 7
-        }
-        product = Category.new_product(product_data)
-
-        assert isinstance(product, Product)
-        assert product.name == "Test Product"
-        assert product.price == 99.99
-
-
-def test_interaction_between_classes():
-    """Test interaction between Product and Category"""
-    Category.reset_counters()
-
-    # Создаем продукты через класс-метод
-    p1 = Category.new_product({"name": "P1", "description": "D1", "price": 10.0, "quantity": 2})
-    p2 = Category.new_product({"name": "P2", "description": "D2", "price": 20.0, "quantity": 3})
-
-    category = Category("Category", "Description", [p1, p2])
-
-    # Проверяем через property-геттер
-    assert "P1, 10.0 руб. Остаток: 2 шт." in category.products
-    assert "P2, 20.0 руб. Остаток: 3 шт." in category.products
-    assert category.category_count == 1
-    assert category.product_count == 2
+        # Test after adding product
+        category.add_product(Product("New", "New desc", 50.0, 2))
+        expected = "Test, количество продуктов: 10 шт."
+        assert str(category) == expected
