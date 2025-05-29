@@ -1,33 +1,43 @@
+from typing import List, Union
+
+
 class Product:
     def __init__(self, name: str, description: str, price: float, quantity: int):
         """
-        Initialize a Product instance.
-        Args:
-            name: Name of the product
-            description: Description of the product
-            price: Price of the product
-            quantity: Quantity available in stock
+        Базовый класс для товаров
+        :param name: Название товара
+        :param description: Описание товара
+        :param price: Цена товара
+        :param quantity: Количество товара в наличии
         """
         self.name = name
         self.description = description
-        self._price = price  # Приватный атрибут
+        self._price = price  # Защищенный атрибут цены
         self.quantity = quantity
 
-    def __str__(self):
-        return f"{self.name}, {self._price} руб. Остаток: {self.quantity} шт."
+    def __str__(self) -> str:
+        """Строковое представление товара"""
+        return f"{self.name}, {self.price} руб. Остаток: {self.quantity} шт."
 
-    def __add__(self, other):
+    def __add__(self, other: 'Product') -> float:
+        """
+        Сложение товаров по стоимости с учетом количества
+        :param other: Другой товар того же класса
+        :return: Общая стоимость
+        """
         if not isinstance(other, Product):
-            raise TypeError("Можно складывать только объекты Product")
-        return self._price * self.quantity + other._price * other.quantity
+            raise TypeError("Можно складывать только объекты класса Product")
+        if type(self) != type(other):
+            raise TypeError("Нельзя складывать товары разных категорий")
+        return self.price * self.quantity + other.price * other.quantity
 
     @property
-    def price(self):
+    def price(self) -> float:
         """Геттер для цены"""
         return self._price
 
     @price.setter
-    def price(self, value):
+    def price(self, value: float) -> None:
         """Сеттер для цены с валидацией"""
         if value <= 0:
             print("Цена не должна быть нулевая или отрицательная")
@@ -35,14 +45,53 @@ class Product:
             self._price = value
 
 
-class Category:
-    _category_count = 0
-    _product_count = 0
+class Smartphone(Product):
+    def __init__(self, name: str, description: str, price: float, quantity: int,
+                 efficiency: float, model: str, memory: int, color: str):
+        """
+        Класс для смартфонов (наследник Product)
+        :param efficiency: Производительность
+        :param model: Модель
+        :param memory: Объем памяти (ГБ)
+        :param color: Цвет
+        """
+        super().__init__(name, description, price, quantity)
+        self.efficiency = efficiency
+        self.model = model
+        self.memory = memory
+        self.color = color
 
-    def __init__(self, name: str, description: str, products: list[Product] = None):
+
+class LawnGrass(Product):
+    def __init__(self, name: str, description: str, price: float, quantity: int,
+                 country: str, germination_period: str, color: str):
+        """
+        Класс для газонной травы (наследник Product)
+        :param country: Страна-производитель
+        :param germination_period: Срок прорастания
+        :param color: Цвет
+        """
+        super().__init__(name, description, price, quantity)
+        self.country = country
+        self.germination_period = germination_period
+        self.color = color
+
+
+class Category:
+    _category_count: int = 0
+    _product_count: int = 0
+
+    def __init__(self, name: str, description: str,
+                 products: List[Union[Product, Smartphone, LawnGrass]] = None):
+        """
+        Класс для категорий товаров
+        :param name: Название категории
+        :param description: Описание категории
+        :param products: Список товаров в категории
+        """
         self.name = name
         self.description = description
-        self._products = []
+        self._products: List[Union[Product, Smartphone, LawnGrass]] = []
 
         if products:
             for product in products:
@@ -50,26 +99,30 @@ class Category:
 
         Category._category_count += 1
 
-    def __str__(self):
+    def __str__(self) -> str:
+        """Строковое представление категории"""
         total_quantity = sum(product.quantity for product in self._products)
         return f"{self.name}, количество продуктов: {total_quantity} шт."
 
-    def add_product(self, product):
-        """Добавляет продукт в категорию с проверкой типа"""
-        if not isinstance(product, Product):
+    def add_product(self, product: Union[Product, Smartphone, LawnGrass]) -> None:
+        """
+        Добавление товара в категорию
+        :param product: Товар (должен быть экземпляром Product или его наследников)
+        """
+        if not isinstance(product, (Product, Smartphone, LawnGrass)):
             raise TypeError("Можно добавлять только объекты Product или его подклассы")
 
         self._products.append(product)
         Category._product_count += 1
 
     @property
-    def products(self):
-        """Геттер для форматированного вывода продуктов"""
+    def products(self) -> str:
+        """Получение форматированного списка товаров"""
         return "\n".join(str(product) for product in self._products)
 
     @classmethod
-    def new_product(cls, product_data: dict):
-        """Создает новый продукт из словаря"""
+    def new_product(cls, product_data: dict) -> Product:
+        """Создание нового товара из словаря"""
         return Product(
             name=product_data['name'],
             description=product_data['description'],
@@ -78,46 +131,17 @@ class Category:
         )
 
     @classmethod
-    def reset_counters(cls):
-        """Сбрасывает счетчики"""
+    def reset_counters(cls) -> None:
+        """Сброс счетчиков категорий и товаров"""
         cls._category_count = 0
         cls._product_count = 0
 
     @property
-    def category_count(self):
-        return self._category_count
+    def category_count(self) -> int:
+        """Получение количества категорий"""
+        return Category._category_count
 
     @property
-    def product_count(self):
-        return self._product_count
-
-
-if __name__ == "__main__":
-    # Тестирование
-    Category.reset_counters()
-
-    try:
-        p1 = Product("Phone", "Smartphone", 500.0, 10)
-        p2 = Product("Laptop", "Gaming laptop", 1500.0, 5)
-
-        # Проверка сложения продуктов
-        print(f"Общая стоимость: {p1 + p2} руб.")
-
-        # Проверка добавления неправильного типа
-        electronics = Category("Electronics", "Electronic devices")
-        electronics.add_product(p1)
-
-        try:
-            electronics.add_product("Not a product")
-        except TypeError as e:
-            print(f"Ошибка: {e}")
-
-        # Проверка сеттера цены
-        p1.price = -100  # Должно вывести сообщение об ошибке
-        p1.price = 600  # Корректное обновление
-
-        print(p1)
-        print(electronics)
-
-    except Exception as e:
-        print(f"Произошла ошибка: {e}")
+    def product_count(self) -> int:
+        """Получение количества товаров"""
+        return Category._product_count
