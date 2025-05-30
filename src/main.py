@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import List, Union
+from typing import List
 
 
 class LoggingMixin:
@@ -132,9 +132,9 @@ class Category:
 if __name__ == '__main__':
     # Демонстрация работы
     smartphone = Smartphone("Samsung Galaxy", "Flagship smartphone", 100000, 10,
-                            95.5, "S23", 256, "Black")
+                          95.5, "S23", 256, "Black")
     lawn_grass = LawnGrass("Premium Grass", "High quality grass", 5000, 100,
-                           "USA", "2 weeks", "Green")
+                         "USA", "2 weeks", "Green")
 
     category = Category("Electronics", "Electronic devices", [smartphone])
     category.add_product(lawn_grass)
