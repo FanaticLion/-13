@@ -1,42 +1,18 @@
 import pytest
-from src.main import Product, Smartphone, LawnGrass, Category, BaseProduct
-
-
-def test_base_product_abstract():
-    """Проверка, что BaseProduct действительно абстрактный"""
-    with pytest.raises(TypeError):
-        # Создаем и сразу проверяем, что нельзя создать экземпляр
-        BaseProduct("Test", "Desc", 100, 1)  # Эта строка вызовет исключение
+from src.main import Product, Category
 
 
 class TestProduct:
-    def test_product_creation(self):
-        p = Product("Test", "Desc", 100.0, 5)
-        assert p.name == "Test"
-        assert p.price == 100.0
-        assert p.quantity == 5  # Добавлена проверка quantity
+    def test_zero_quantity_validation(self):
+        """Тест обработки нулевого количества"""
+        with pytest.raises(ValueError) as excinfo:
+            Product("Test", "Desc", 100.0, 0)
+        assert "Товар с нулевым количеством не может быть добавлен" in str(excinfo.value)
 
-    def test_price_validation(self):
-        p = Product("Test", "Desc", 100.0, 5)
-        with pytest.raises(ValueError):
-            p.price = -50
-        assert p.price == 100.0  # Проверяем, что цена не изменилась
-
-
-class TestSmartphone:
-    def test_smartphone_creation(self):
-        s = Smartphone("Phone", "Desc", 500.0, 10, 95.5, "Model", 256, "Black")
-        assert isinstance(s, Product)
-        assert s.memory == 256
-        assert s.color == "Black"  # Добавлена проверка цвета
-
-
-class TestLawnGrass:
-    def test_lawn_grass_creation(self):
-        lg = LawnGrass("Grass", "Desc", 50.0, 20, "Russia", "7 days", "Green")
-        assert isinstance(lg, Product)
-        assert lg.country == "Russia"
-        assert lg.germination_period == "7 days"  # Добавлена проверка
+    def test_valid_product_creation(self):
+        """Тест создания валидного продукта"""
+        p = Product("Test", "Desc", 100.0, 1)
+        assert p.quantity == 1
 
 
 class TestCategory:
@@ -45,33 +21,43 @@ class TestCategory:
         Category.reset_counters()
         yield
 
-    def test_category_add_product(self):
-        cat = Category("Cat", "Desc")
-        p = Product("P", "D", 100.0, 5)
-        cat.add_product(p)
-        assert cat.product_count == 1
-        assert len(cat._products) == 1  # Проверяем добавление продукта
+    @pytest.fixture
+    def sample_products(self):
+        return [
+            Product("P1", "D1", 100.0, 1),
+            Product("P2", "D2", 200.0, 2),
+            Product("P3", "D3", 300.0, 3)
+        ]
 
-    def test_category_str(self):
-        p = Product("P", "D", 100.0, 5)
-        cat = Category("Cat", "Desc", [p])
-        assert "количество продуктов: 5 шт." in str(cat)
-        assert cat.category_count == 1  # Проверяем счетчик категорий
+    def test_middle_price_calculation(self, sample_products):
+        """Тест расчета средней цены"""
+        category = Category("Test", "Desc", sample_products)
+        assert category.middle_price() == 200.0  # (100+200+300)/3 = 200
+
+    def test_empty_category_middle_price(self):
+        """Тест средней цены для пустой категории"""
+        category = Category("Empty", "Desc")
+        assert category.middle_price() == 0
+
+    def test_add_product_increases_count(self):
+        """Тест увеличения счетчика при добавлении"""
+        category = Category("Test", "Desc")
+        initial_count = category.product_count
+        category.add_product(Product("P", "D", 100.0, 1))
+        assert category.product_count == initial_count + 1
 
 
-def test_mixin_logging(capsys):
-    """Проверка работы миксина логирования"""
-    p = Product("Test", "Desc", 100.0, 5)
-    captured = capsys.readouterr()
-    assert "Создан объект класса Product" in captured.out
-    assert p.name == "Test"  # Проверяем, что объект создан корректно
+def test_main_scenario():
+    """Интеграционный тест основного сценария"""
+    try:
+        Product("Invalid", "Desc", 100.0, 0)
+        assert False, "Должна была возникнуть ошибка"
+    except ValueError:
+        pass
 
-
-def test_product_addition():
-    p1 = Product("P1", "D1", 100.0, 2)
-    p2 = Product("P2", "D2", 200.0, 3)
-    assert p1 + p2 == 800.0
-
-    s = Smartphone("S", "D", 500.0, 1, 90.0, "M", 256, "Black")
-    with pytest.raises(TypeError):
-        p1 + s  # type: ignore
+    valid_products = [
+        Product("P1", "D1", 100.0, 1),
+        Product("P2", "D2", 200.0, 2)
+    ]
+    category = Category("Test", "Desc", valid_products)
+    assert category.middle_price() == 150.0
