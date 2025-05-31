@@ -7,10 +7,10 @@ class Product:
         Инициализация продукта с валидацией
         :raises ValueError: При недопустимых значениях цены или количества
         """
-        if quantity <= 0:
-            raise ValueError("Количество товара должно быть положительным")
-        if price <= 0:
-            raise ValueError("Цена должна быть положительной")
+        if quantity == 0:  # Строго проверяем на ноль
+            raise ValueError("Товар с нулевым количеством не может быть добавлен")
+        if quantity < 0 or price <= 0:
+            raise ValueError("Количество должно быть положительным и цена должна быть положительной")
 
         self.name = name
         self.description = description
@@ -36,10 +36,6 @@ class Category:
     _product_count = 0
 
     def __init__(self, name: str, description: str, initial_products: List[Product] = None):
-        """
-        Инициализация категории товаров
-        :param initial_products: Начальный список товаров (переименован для избежания затенения)
-        """
         self.name = name
         self.description = description
         self._products: List[Product] = []
@@ -51,7 +47,6 @@ class Category:
         Category._category_count += 1
 
     def middle_price(self) -> float:
-        """Вычисляет среднюю цену товаров в категории"""
         if not self._products:
             return 0.0
         return sum(p.price for p in self._products) / len(self._products)
@@ -81,24 +76,24 @@ class Category:
 
 
 def demonstrate_usage():
-    """Функция для демонстрации работы классов"""
+    """Демонстрация работы с обработкой ошибок"""
     try:
-        # Тест обработки ошибок
-        Product("Тест", "Невалидный", -100, 0)
+        # Проверка точного сообщения для нулевого количества
+        Product("Тест", "Нулевое количество", 100, 0)
     except ValueError as e:
-        print(f"Ожидаемая ошибка: {e}")
+        assert str(e) == "Товар с нулевым количеством не может быть добавлен", "Неверное сообщение об ошибке"
+        print("Тест сообщения об ошибке пройден")
 
-    # Создание товаров
-    product_list = [
-        Product("Galaxy S23", "Флагман Samsung", 180000.0, 5),
-        Product("iPhone 15", "Премиум смартфон", 210000.0, 8),
-        Product("Redmi Note 11", "Бюджетный", 31000.0, 14)
-    ]
-
-    # Работа с категорией
-    tech_category = Category("Электроника", "Технические устройства", product_list)
-    print(f"Средняя цена: {tech_category.middle_price():.2f} руб.")
-    print(f"Всего товаров: {tech_category.product_count}")
+    # Создание и работа с корректными данными
+    try:
+        products = [
+            Product("Galaxy S23", "Флагман", 180000.0, 5),
+            Product("iPhone 15", "Премиум", 210000.0, 8)
+        ]
+        tech = Category("Смартфоны", "Мобильные устройства", products)
+        print(f"Средняя цена: {tech.middle_price():.2f} руб.")
+    except Exception as e:
+        print(f"Ошибка: {e}")
 
 
 if __name__ == '__main__':
